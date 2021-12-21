@@ -8,52 +8,62 @@ from random import random
 import numpy as np
 
 class DRIVE_dataset (Dataset):
-    def __init__(self, image_dir, mask_dir, resize, transform=None):
+    def __init__(self, image_dir, mask_dir, resize, rotation,
+    hflip_prob, brightness, contrast, gamma, transform):
         self.image_dir = image_dir
         self.mask_dir = mask_dir
-        self.transform = transform
         self.resize = resize
-
+        self.rotation = rotation
+        self.hflip_prob = hflip_prob
+        self.brightness = brightness
+        self.contrast = contrast
+        self.gamma = gamma
+        self.transform = transform
         self.images = os.listdir(image_dir)
 
     def __len__(self):
         return len(self.images)
     
     def transform_train(self, image, mask):
-        # Resize
+      # Resize
+      if self.resize is not None:
         resize = transforms.Resize(size=self.resize)
         image = resize(image)
         mask = resize(mask)
-        # Random rotation
-        degree = np.random.randint(-10, 10)
+      # Random rotation
+      if self.rotation is not None:
+        degree = np.random.randint(self.rotation[0], self.rotation[1])
         image = TF.rotate(image, degree)
         mask = TF.rotate(mask, degree)
-        # Random horizontal flipping
-        if random() > 0.5:
-            image = TF.hflip(image)
-            mask = TF.hflip(mask)
-        # Transform to tensor
-        tens = transforms.ToTensor()
-        image = tens(image)
-        mask = tens(mask)
-        # Normalize
-        norm = transforms.Normalize(mean=(0.0, 0.0, 0.0),
-                                    std=(1.0, 1.0, 1.0))
-        image = norm(image)
-        mask = norm(mask)
-        return image, mask
+      # Random horizontal flipping
+      if self.hflip_prob is not None:
+        if random() < self.hflip_prob:
+          image = TF.hflip(image)
+          mask = TF.hflip(mask)
+      # Encadeno 3 transformaciones excluyentes entre si
+      # Brightness
+      if random() < 0.33333:
+        image = TF.adjust_brightness(image, np.random.uniform(self.brightness[0], self.brightness[1]))
+      # Gamma
+      elif random() > 0.5:
+        image = TF.adjust_gamma(image, np.random.uniform(self.gamma[0], self.gamma[1]))
+      # Contrast
+      else:
+        image = TF.adjust_contrast(image, np.random.uniform(self.contrast[0], self.contrast[1]))
+      # Transform to tensor
+      tens = transforms.ToTensor()
+      image = tens(image)
+      mask = tens(mask)
+        
+      return image, mask
     
     def transform_test(self, image, mask):
-        # Transform to tensor
-        tens = transforms.ToTensor()
-        image = tens(image)
-        mask = tens(mask)
-        # Normalize
-        norm = transforms.Normalize(mean=(0.0, 0.0, 0.0),
-                                    std=(1.0, 1.0, 1.0))
-        image = norm(image)
-        mask = norm(mask)
-        return image, mask
+      # Transform to tensor
+      tens = transforms.ToTensor()
+      image = tens(image)
+      mask = tens(mask)
+        
+      return image, mask
 
     def __getitem__(self, index):
 
