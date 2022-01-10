@@ -104,24 +104,60 @@ def load_checkpoint(checkpoint, model):
     model.load_state_dict(checkpoint["state_dict"])
 
 
-def train_fn(loader, model, optimizer, loss_fn, DEVICE):
-    for batch_idx, (data, targets, numbers) in enumerate(loader):
+# Logging functions
 
-        data = data.to(device=DEVICE)
-        targets = targets.unsqueeze(1).to(device=DEVICE)
+def batch_logging(epoch: int, loss: float, metrics: dict):
+    print("\rEpoch {:4d} | loss: {:.5f} |{}"
+        .format(epoch, loss, "".join(" {}: {:.5f} |".format(k, metrics[k]) for k in sorted(metrics.keys()))), end="")
 
+def epoch_logging(epoch, loss: float, val_loss: float, metrics: dict = None, val_metrics: dict = None, t: float = None):
+    print("\rEpoch {:4d} | loss: {:.5f} |{} val_loss: {:.5f} |{} {}"
+        .format(epoch, loss, "".join(" {}: {:.5f} |".format(k, metrics[k]) for k in sorted(metrics.keys())) if metrics else "",
+            val_loss, "".join(" {}: {:.5f} |".format(k, val_metrics[k]) for k in sorted(val_metrics.keys())) if val_metrics else "", 
+            "time: {:.2f}s".format(t) if t else ""))
+
+# Training functions
+
+def train_fn(loader, model, optimizer, loss_fn, DEVICE, metric_fn = None, epoch = 0): 
+    # metric_fn es un objeto (o funcion) que recibe las predicciones y las 
+    # labels y devuelve una o varias metricas (customizable) en diccionario
+    model.train()
+
+    losses = []
+    metrics = [] if metric_fn else None
+
+    for data, targets, numbers in loader:      
         # fwd
-        optimizer.zero_grad()
-        predictions = model(data)
-        loss = loss_fn(predictions, targets)
+        predictions = model(data.to(DEVICE))
+        loss = loss_fn(predictions, targets.unsqueeze(1).to(DEVICE))
 
+        optimizer.zero_grad()
         # backward
         loss.backward()
         optimizer.step()
 
-        # Update tqdm loop
-        # loop.set_postfix(loss=loss.item())
-        print(f"Loss: {loss}")
+        losses.append(loss.item())
+
+        if metric_fn:
+            batch_metrics = metric_fn(predictions.detach().cpu().ravel(), targets.ravel())
+            metrics.append(batch_metrics)
+
+        batch_logging(epoch, loss.item(), batch_metrics if metric_fn else "")
+        #print(f"Loss: {loss}")
+
+    return {**{"loss": losses}, **{k: [ms[k] for ms in metrics] for k in metrics[0].keys()}}
+
+def eval_model(loader, model, loss_fn, DEVICE, metric_fn):
+    model.eval()
+    losses = []
+    metrics = []
+    with torch.no_grad():
+        for x, y, number in loader:
+            predictions = model(x.to(DEVICE))
+            losses.append(loss_fn(predictions, y.unsqueeze(1).to(DEVICE)).item())
+            metrics.append(metric_fn(predictions.cpu().ravel(), y.ravel()))
+
+    return {**{"loss": np.mean(losses)}, **{k: np.mean([ms[k] for ms in metrics]) for k in metrics[0].keys()}}
 
 
 def save_predictions_as_imgs(loader, model, folder, device):
@@ -132,9 +168,9 @@ def save_predictions_as_imgs(loader, model, folder, device):
             preds = torch.sigmoid(model(x))
             preds = (preds > 0.5).float()
         torchvision.utils.save_image(
-            preds, f"{folder}/pred_{number}.png"
+            preds, "{}/pred_{}.png".format(folder, number)
         )
-        torchvision.utils.save_image(y.unsqueeze(1), f"{folder}{number}.png")
+        torchvision.utils.save_image(y.unsqueeze(1), "{}{}.png".format(folder, number))
         
 def make_grid(
     tensor: Union[torch.Tensor, List[torch.Tensor]],
