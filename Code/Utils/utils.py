@@ -4,10 +4,10 @@ from torch.utils.data import DataLoader
 import torchvision
 from sklearn.metrics import roc_auc_score
 import math
-import pathlib
+import numpy as np
 import warnings
-from types import FunctionType
-from typing import Any, Union, Optional, List, Tuple, BinaryIO
+from typing import Union, Optional, List, Tuple
+
 
 def get_loaders(
     train_dir,
@@ -28,25 +28,25 @@ def get_loaders(
     train_ds = DRIVE_dataset(
         image_dir=train_dir,
         mask_dir=train_maskdir,
-        resize = resize,
+        resize=resize,
         transform="train",
-        rotation = rotation,
-        hflip_prob = hflip_prob,
-        brightness = brightness,
-        contrast = contrast,
-        gamma = gamma
+        rotation=rotation,
+        hflip_prob=hflip_prob,
+        brightness=brightness,
+        contrast=contrast,
+        gamma=gamma
     )
 
     validation_ds = DRIVE_dataset(
         image_dir=val_dir,
         mask_dir=val_maskdir,
-        resize = resize,
+        resize=resize,
         transform="test",
-        rotation = rotation,
-        hflip_prob = hflip_prob,
-        brightness = brightness,
-        contrast = contrast,
-        gamma = gamma
+        rotation=rotation,
+        hflip_prob=hflip_prob,
+        brightness=brightness,
+        contrast=contrast,
+        gamma=gamma
     )
 
     train_loader = DataLoader(
@@ -83,8 +83,10 @@ def check_accuracy(loader, model, device):
             preds = (preds > 0.5).float()
             num_correct += (preds == y.unsqueeze(1)).sum()
             num_pixels += torch.numel(preds)
-            dice_score += (2 * (preds * y.unsqueeze(1)).sum()) / ((preds + y.unsqueeze(1)).sum() + 1e-8)
-            auc += roc_auc_score(y.unsqueeze(1).view(y.numel()).cpu(), preds.view(preds.numel()).cpu())
+            dice_score += (2 * (preds * y.unsqueeze(1)).sum()) / \
+                ((preds + y.unsqueeze(1)).sum() + 1e-8)
+            auc += roc_auc_score(y.unsqueeze(1).view(y.numel()).cpu(),
+                                 preds.view(preds.numel()).cpu())
     print(f"{num_correct} correct of {num_pixels} total pixels")
     print(f'Got {int(num_correct)/num_pixels*100}% accuracy')
     print(f'Dice score: {dice_score/len(loader)}')
@@ -104,24 +106,68 @@ def load_checkpoint(checkpoint, model):
     model.load_state_dict(checkpoint["state_dict"])
 
 
-def train_fn(loader, model, optimizer, loss_fn, DEVICE):
-    for batch_idx, (data, targets, numbers) in enumerate(loader):
+# Logging functions
 
-        data = data.to(device=DEVICE)
-        targets = targets.unsqueeze(1).to(device=DEVICE)
+def batch_logging(epoch: int, loss: float, metrics: dict):
+    print("\rEpoch {:4d} | loss: {:.5f} |{}"
+          .format(epoch, loss, "".join(" {}: {:.5f} |".format(k, metrics[k])
+                  for k in sorted(metrics.keys()))), end="")
 
+
+def epoch_logging(epoch, loss: float, val_loss: float, metrics: dict = None,
+                  val_metrics: dict = None, t: float = None):
+    print("\rEpoch {:4d} | loss: {:.5f} |{} val_loss: {:.5f} |{} {}"
+          .format(epoch, loss, "".join(" {}: {:.5f} |".format(k, metrics[k])
+                                       for k in sorted(metrics.keys()))
+                  if metrics else "",
+                  val_loss, "".join(" {}: {:.5f} |".format(k, val_metrics[k])
+                  for k in sorted(val_metrics.keys())) if val_metrics else "",
+                  "time: {:.2f}s".format(t) if t else ""))
+
+# Training functions
+
+
+def train_fn(loader, model, optimizer, loss_fn, DEVICE, metric_fn=None,
+             epoch=0):
+    # metric_fn es un objeto (o funcion) que recibe predicciones y
+    # labels y devuelve una o varias metricas (customizable) en diccionario
+    model.train()
+
+    losses = []
+    metrics = [] if metric_fn else None
+
+    for data, targets, numbers in loader:
         # fwd
-        optimizer.zero_grad()
-        predictions = model(data)
-        loss = loss_fn(predictions, targets)
+        predictions = model(data.to(DEVICE))
+        loss = loss_fn(predictions, targets.unsqueeze(1).to(DEVICE))
 
+        optimizer.zero_grad()
         # backward
         loss.backward()
         optimizer.step()
 
-        # Update tqdm loop
-        # loop.set_postfix(loss=loss.item())
-        print(f"Loss: {loss}")
+        losses.append(loss.item())
+
+        if metric_fn:
+            batch_metrics = metric_fn(predictions.detach().cpu().ravel(), targets.ravel())
+            metrics.append(batch_metrics)
+        batch_logging(epoch, loss.item(), batch_metrics if metric_fn else "")
+
+    return {**{"loss": losses}, **{k: [ms[k] for ms in metrics]
+                                   for k in metrics[0].keys()}}
+
+
+def eval_model(loader, model, loss_fn, DEVICE, metric_fn):
+    model.eval()
+    losses = []
+    metrics = []
+    with torch.no_grad():
+        for x, y, number in loader:
+            predictions = model(x.to(DEVICE))
+            losses.append(loss_fn(predictions, y.unsqueeze(1).to(DEVICE)).item())
+            metrics.append(metric_fn(predictions.cpu().ravel(), y.ravel()))
+
+    return {**{"loss": np.mean(losses)}, **{k: np.mean([ms[k] for ms in metrics]) for k in metrics[0].keys()}}
 
 
 def save_predictions_as_imgs(loader, model, folder, device):
@@ -132,10 +178,12 @@ def save_predictions_as_imgs(loader, model, folder, device):
             preds = torch.sigmoid(model(x))
             preds = (preds > 0.5).float()
         torchvision.utils.save_image(
-            preds, f"{folder}/pred_{number}.png"
+            preds, "{}/pred_{}.png".format(folder, number)
         )
-        torchvision.utils.save_image(y.unsqueeze(1), f"{folder}{number}.png")
-        
+        torchvision.utils.save_image(y.unsqueeze(1),
+                                     "{}{}.png".format(folder, number))
+
+
 def make_grid(
     tensor: Union[torch.Tensor, List[torch.Tensor]],
     nrow: int = 8,
@@ -148,29 +196,31 @@ def make_grid(
 ) -> torch.Tensor:
     """
     Make a grid of images.
-
     Args:
         tensor (Tensor or list): 4D mini-batch Tensor of shape (B x C x H x W)
             or a list of images all of the same size.
-        nrow (int, optional): Number of images displayed in each row of the grid.
-            The final grid size is ``(B / nrow, nrow)``. Default: ``8``.
+        nrow (int, optional): Number of images displayed in each row of the
+            grid. The final grid size is ``(B / nrow, nrow)``. Default: ``8``.
         padding (int, optional): amount of padding. Default: ``2``.
-        normalize (bool, optional): If True, shift the image to the range (0, 1),
-            by the min and max values specified by ``value_range``. Default: ``False``.
-        value_range (tuple, optional): tuple (min, max) where min and max are numbers,
-            then these numbers are used to normalize the image. By default, min and max
-            are computed from the tensor.
-        scale_each (bool, optional): If ``True``, scale each image in the batch of
-            images separately rather than the (min, max) over all images. Default: ``False``.
-        pad_value (float, optional): Value for the padded pixels. Default: ``0``.
-
+        normalize (bool, optional): If True, shift the image to the range
+        (0, 1), by the min and max values specified by ``value_range``.
+        Default: ``False``.
+        value_range (tuple, optional): tuple (min, max) where min and max are
+        numbers, then these numbers are used to normalize the image.
+        By default, min and max are computed from the tensor.
+        scale_each (bool, optional): If ``True``, scale each image in the
+        batch of images separately rather than the (min, max) over all images.
+        Default: ``False``.
+        pad_value (float, optional): Value for the padded pixels.
+        Default: ``0``.
     Returns:
         grid (Tensor): the tensor containing grid of images.
     """
-    if not torch.jit.is_scripting() and not torch.jit.is_tracing():
-        _log_api_usage_once(make_grid)
-    if not (torch.is_tensor(tensor) or (isinstance(tensor, list) and all(torch.is_tensor(t) for t in tensor))):
-        raise TypeError(f"tensor or list of tensors expected, got {type(tensor)}")
+    if not (torch.is_tensor(tensor) or
+            (isinstance(tensor, list) and
+            all(torch.is_tensor(t) for t in tensor))):
+        raise TypeError(
+            f"tensor or list of tensors expected,got {type(tensor)}")
 
     if "range" in kwargs.keys():
         warning = "range will be deprecated, please use value_range instead."
@@ -222,17 +272,20 @@ def make_grid(
     nmaps = tensor.size(0)
     xmaps = min(nrow, nmaps)
     ymaps = int(math.ceil(float(nmaps) / xmaps))
-    height, width = int(tensor.size(2) + padding), int(tensor.size(3) + padding)
+    height, width = int(tensor.size(2) + padding), int(tensor.size(3) +
+                                                       padding)
     num_channels = tensor.size(1)
-    grid = tensor.new_full((num_channels, height * ymaps + padding, width * xmaps + padding), pad_value)
+    grid = tensor.new_full((num_channels, height * ymaps +
+                            padding, width * xmaps + padding), pad_value)
     k = 0
     for y in range(ymaps):
         for x in range(xmaps):
             if k >= nmaps:
                 break
-            # Tensor.copy_() is a valid method but seems to be missing from the stubs
+            # Tensor.copy_() is a valid method but seems to be missing from
+            # the stubs
             # https://pytorch.org/docs/stable/tensors.html#torch.Tensor.copy_
-            grid.narrow(1, y * height + padding, height - padding).narrow(  # type: ignore[attr-defined]
+            grid.narrow(1, y * height + padding, height - padding).narrow(
                 2, x * width + padding, width - padding
             ).copy_(tensor[k])
             k = k + 1
