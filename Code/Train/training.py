@@ -9,6 +9,12 @@ sys.path.append('../Models')
 from utils import get_loaders, save_checkpoint, train_fn, \
     save_predictions_as_imgs, eval_model, epoch_logging
 from U_net import UNET
+import os
+
+TRAINING_FOLDER = "2022_01_30_2"
+if not os.path.exists(os.path.join("..", "Checkpoints", TRAINING_FOLDER)):
+    os.makedirs(os.path.join("..", "Checkpoints", TRAINING_FOLDER))
+    os.makedirs(os.path.join("..", "Checkpoints", TRAINING_FOLDER, "image_predictions"))
 
 # Model Hyperparams
 LR = 5e-3
@@ -88,10 +94,10 @@ optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 # checkpoint loading
 LOAD_CHECKPOINT = False
 if LOAD_CHECKPOINT:
-    state = torch.load("../Checkpoints/dev/my_check.pth.tar")
+    state = torch.load("../Checkpoints/{}/my_check.pth.tar".format(TRAINING_FOLDER))
     model.load_state_dict(state["state_dict"])
     optimizer.load_state_dict(state["optimizer"])
-    training_logs = torch.load("../Checkpoints/dev/training_logs.pt")
+    training_logs = torch.load("../Checkpoints/{}/training_logs.pt".format(TRAINING_FOLDER))
 
 lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, "min",
                                                           factor=0.5,
@@ -138,17 +144,17 @@ for epoch in range(NUM_EPOCHS):
         checkpoint = {"state_dict": model.state_dict(),
                       "optimizer": optimizer.state_dict(),
                       "best_metric": training_logs["best_"+CONTROL_METRIC]}
-        save_checkpoint(checkpoint, "../Checkpoints/dev/my_check.pth.tar")
+        save_checkpoint(checkpoint, "../Checkpoints/{}/my_check.pth.tar".format(TRAINING_FOLDER), best_metric = training_logs["best_"+CONTROL_METRIC])
         save_predictions_as_imgs(val_loader, model,
-                                 folder="../Checkpoints/dev/image_predictions",
+                                 folder="../Checkpoints/{}/image_predictions".format(TRAINING_FOLDER),
                                  device=DEVICE)
 
     training_logs["saved"].append(check)
 
     if not epoch % 20 or epoch == (NUM_EPOCHS - 1):
-        torch.save(training_logs, "../Checkpoints/dev/training_logs2.pt")
+        torch.save(training_logs, "../Checkpoints/{}/training_logs.pt".format(TRAINING_FOLDER))
 
-    lr_scheduler.step(np.mean(train_results["loss"]))
+    lr_scheduler.step(np.mean(train_results["loss"][-50:]))
 
 params = {
           'LR': LR,
@@ -165,4 +171,4 @@ params = {
           'ACCURACY': training_logs["best_accuracy"],
           'AUC': training_logs["best_auc"]
 }
-torch.save(params, "../Checkpoints/dev/training_params.pt")
+torch.save(params, "../Checkpoints/{}/training_params.pt".format(TRAINING_FOLDER))

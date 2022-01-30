@@ -96,8 +96,8 @@ def check_accuracy(loader, model, device):
     return int(num_correct)/num_pixels, dice_score/len(loader), auc/len(loader)
 
 
-def save_checkpoint(state, filename):
-    print(" => Saving checkpoint ")
+def save_checkpoint(state, filename, best_metric = None):
+    print(" => Saving checkpoint {}".format("| Best metric: {:.5f}".format(best_metric) if best_metric else ""))
     torch.save(state, filename)
 
 
