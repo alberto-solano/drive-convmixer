@@ -33,12 +33,14 @@ TRAIN_IMG_DIR = "../../Data/dataset_DRIVE/training/images/"
 TRAIN_MASK_DIR = "../../Data/dataset_DRIVE/training/1st_manual/"
 VAL_IMG_DIR = "../../Data/dataset_DRIVE/validation/images/"
 VAL_MASK_DIR = "../../Data/dataset_DRIVE/validation/1st_manual/"
-RESIZE = None
 ROTATION = [-180, 180]
 HFLIP_PROB = 0.5
 BRIGHTNESS = [0.8, 1.2]
 CONTRAST = [0.8, 1.2]
 GAMMA = [0.9, 1.1]
+CROP_SIZE = (438, 424)  #3/4 
+P_CROP = 0.2
+NOISE = (0, 0.05)  # (Mean,std)
 
 train_loader, val_loader = get_loaders(
      TRAIN_IMG_DIR,
@@ -46,12 +48,14 @@ train_loader, val_loader = get_loaders(
      VAL_IMG_DIR,
      VAL_MASK_DIR,
      BATCH_SIZE,
-     RESIZE,
      ROTATION,
      HFLIP_PROB,
      BRIGHTNESS,
      CONTRAST,
      GAMMA,
+     CROP_SIZE,
+     P_CROP,
+     NOISE,
      NUM_WORKERS,
      PIN_MEMORY)
 

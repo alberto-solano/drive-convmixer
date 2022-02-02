@@ -15,12 +15,14 @@ def get_loaders(
     val_dir,
     val_maskdir,
     batch_size,
-    resize,
     rotation,
     hflip_prob,
     brightness,
     contrast,
     gamma,
+    crop_size,
+    p_crop,
+    noise,
     num_workers,
     pin_memory
 ):
@@ -28,25 +30,29 @@ def get_loaders(
     train_ds = DRIVE_dataset(
         image_dir=train_dir,
         mask_dir=train_maskdir,
-        resize=resize,
         transform="train",
         rotation=rotation,
         hflip_prob=hflip_prob,
         brightness=brightness,
         contrast=contrast,
-        gamma=gamma
+        gamma=gamma,
+        crop_size=crop_size,
+        p_crop=p_crop,
+        noise=noise
     )
 
     validation_ds = DRIVE_dataset(
         image_dir=val_dir,
         mask_dir=val_maskdir,
-        resize=resize,
         transform="test",
         rotation=rotation,
         hflip_prob=hflip_prob,
         brightness=brightness,
         contrast=contrast,
-        gamma=gamma
+        gamma=gamma,
+        crop_size=crop_size,
+        p_crop=p_crop,
+        noise=noise
     )
 
     train_loader = DataLoader(
