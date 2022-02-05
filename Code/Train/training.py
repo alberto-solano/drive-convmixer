@@ -12,7 +12,7 @@ from utils import get_loaders, save_checkpoint, train_fn, \
 from U_net import UNET
 import os
 
-TRAINING_FOLDER = "2022_01_30_2"
+TRAINING_FOLDER = "2022_02_05_2"
 if not os.path.exists(os.path.join("..", "Checkpoints", TRAINING_FOLDER)):
     os.makedirs(os.path.join("..", "Checkpoints", TRAINING_FOLDER))
     os.makedirs(os.path.join("..", "Checkpoints", TRAINING_FOLDER, "image_predictions"))
@@ -20,9 +20,9 @@ if not os.path.exists(os.path.join("..", "Checkpoints", TRAINING_FOLDER)):
 # Model Hyperparams
 LR = 2e-3
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-BATCH_SIZE = 3
-NUM_EPOCHS = 2000
-NUM_WORKERS = 0
+BATCH_SIZE = 2
+NUM_EPOCHS = 2500
+NUM_WORKERS = -1
 PIN_MEMORY = True
 LOAD_MODEL = False
 LOSS_WEIGHTS = 10
