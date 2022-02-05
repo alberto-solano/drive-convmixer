@@ -20,8 +20,9 @@ def get_loaders(
     brightness,
     contrast,
     gamma,
-    crop_size,
-    p_crop,
+    affine_translate,
+    affine_scale,
+    affine_shears,
     noise,
     num_workers,
     pin_memory
@@ -36,8 +37,9 @@ def get_loaders(
         brightness=brightness,
         contrast=contrast,
         gamma=gamma,
-        crop_size=crop_size,
-        p_crop=p_crop,
+        affine_translate=affine_translate,
+        affine_scale=affine_scale,
+        affine_shears=affine_shears,
         noise=noise
     )
 
@@ -50,8 +52,9 @@ def get_loaders(
         brightness=brightness,
         contrast=contrast,
         gamma=gamma,
-        crop_size=crop_size,
-        p_crop=p_crop,
+        affine_translate=affine_translate,
+        affine_scale=affine_scale,
+        affine_shears=affine_shears,
         noise=noise
     )
 
@@ -102,7 +105,7 @@ def check_accuracy(loader, model, device):
     return int(num_correct)/num_pixels, dice_score/len(loader), auc/len(loader)
 
 
-def save_checkpoint(state, filename, best_metric = None):
+def save_checkpoint(state, filename, best_metric=None):
     print(" => Saving checkpoint {}".format("| Best metric: {:.5f}".format(best_metric) if best_metric else ""))
     torch.save(state, filename)
 

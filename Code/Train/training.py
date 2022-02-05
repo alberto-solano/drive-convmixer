@@ -1,3 +1,4 @@
+from ast import arg
 import numpy as np
 import torch
 import torch.nn as nn
@@ -19,7 +20,7 @@ if not os.path.exists(os.path.join("..", "Checkpoints", TRAINING_FOLDER)):
 # Model Hyperparams
 LR = 2e-3
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-BATCH_SIZE = 2
+BATCH_SIZE = 3
 NUM_EPOCHS = 2000
 NUM_WORKERS = 0
 PIN_MEMORY = True
@@ -29,35 +30,24 @@ CONTROL_METRIC = "dice"
 
 # Training Loader params
 
-TRAIN_IMG_DIR = "../../Data/dataset_DRIVE/training/images/"
-TRAIN_MASK_DIR = "../../Data/dataset_DRIVE/training/1st_manual/"
-VAL_IMG_DIR = "../../Data/dataset_DRIVE/validation/images/"
-VAL_MASK_DIR = "../../Data/dataset_DRIVE/validation/1st_manual/"
-ROTATION = [-180, 180]
-HFLIP_PROB = 0.5
-BRIGHTNESS = [0.8, 1.2]
-CONTRAST = [0.8, 1.2]
-GAMMA = [0.9, 1.1]
-CROP_SIZE = (438, 424)  #3/4 
-P_CROP = 0.2
-NOISE = (0, 0.05)  # (Mean,std)
+kwargs = {'train_dir': '../../Data/dataset_DRIVE/training/images/',
+          'train_maskdir': '../../Data/dataset_DRIVE/training/1st_manual/',
+          'val_dir': '../../Data/dataset_DRIVE/validation/images/',
+          'val_maskdir': "../../Data/dataset_DRIVE/validation/1st_manual/",
+          'batch_size': BATCH_SIZE,
+          'rotation': [-180, 180],
+          'hflip_prob': 0.5,
+          'brightness': [0.8, 1.2],
+          'contrast': [0.8, 1.2],
+          'gamma': [0.9, 1.1],
+          'affine_translate': [0.05, 0.1],  # Horiz and vert translation
+          'affine_scale': [1, 2],
+          'affine_shears': [0, 10],
+          'noise': (0, 0.05),  # (Mean,std)
+          'num_workers': 0,
+          'pin_memory': True}
 
-train_loader, val_loader = get_loaders(
-     TRAIN_IMG_DIR,
-     TRAIN_MASK_DIR,
-     VAL_IMG_DIR,
-     VAL_MASK_DIR,
-     BATCH_SIZE,
-     ROTATION,
-     HFLIP_PROB,
-     BRIGHTNESS,
-     CONTRAST,
-     GAMMA,
-     CROP_SIZE,
-     P_CROP,
-     NOISE,
-     NUM_WORKERS,
-     PIN_MEMORY)
+train_loader, val_loader = get_loaders(**kwargs)
 
 
 def metric_fn(logits, targets, thres=0.5):
@@ -165,12 +155,15 @@ params = {
           'BATCH_SIZE': BATCH_SIZE,
           'NUM_EPOCHS': NUM_EPOCHS,
           'LOSS_WEIGHTS': LOSS_WEIGHTS,
-          'RESIZE': RESIZE,
-          'ROTATION': ROTATION,
-          'HFLIP_PROB': HFLIP_PROB,
-          'BRIGHTNESS': BRIGHTNESS,
-          'CONTRAST': CONTRAST,
-          'GAMMA': GAMMA,
+          'ROTATION': kwargs['rotation'],
+          'HFLIP_PROB': kwargs['hflip_prob'],
+          'BRIGHTNESS': kwargs['brightness'],
+          'CONTRAST': kwargs['contrast'],
+          'GAMMA': kwargs['gamma'],
+          'AFFINE_TRANSLATE': kwargs['affine_translate'],
+          'AFFINE_SCALE': kwargs['affine_scale'],
+          'AFFINE_SHEARS': kwargs['affine_shears'],
+          'NOISE': kwargs['noise'],
           'DICE': training_logs["best_dice"],
           'ACCURACY': training_logs["best_accuracy"],
           'AUC': training_logs["best_auc"]
