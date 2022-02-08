@@ -10,8 +10,8 @@ import numpy as np
 
 class DRIVE_dataset (Dataset):
     def __init__(self, image_dir, mask_dir, rotation, hflip_prob,
-                 brightness, contrast, gamma, affine_translate, affine_scale,
-                 affine_shears, noise, transform):
+                 brightness, contrast, gamma, affine_prob, affine_translate,
+                 affine_scale, affine_shears, noise, transform):
         self.image_dir = image_dir
         self.mask_dir = mask_dir
         self.rotation = rotation
@@ -19,6 +19,7 @@ class DRIVE_dataset (Dataset):
         self.brightness = brightness
         self.contrast = contrast
         self.gamma = gamma
+        self.affine_prob = affine_prob
         self.affine_translate = affine_translate
         self.affine_scale = affine_scale
         self.affine_shears = affine_shears
@@ -44,24 +45,25 @@ class DRIVE_dataset (Dataset):
             mask = TF.hflip(mask)
 
         # Random affine
-        affine_param = RandomAffine.get_params(
-            degrees=[0, 0], translate=self.affine_translate,
-            img_size=[584, 565], scale_ranges=self.affine_scale,
-            shears=self.affine_shears)
-        image = TF.affine(image,
-                          affine_param[0], affine_param[1],
-                          affine_param[2], affine_param[3])
-        mask = TF.affine(mask,
-                         affine_param[0], affine_param[1],
-                         affine_param[2], affine_param[3])
+        if random() < self.affine_prob:
+            affine_param = RandomAffine.get_params(
+                degrees=[0, 0], translate=self.affine_translate,
+                img_size=[584, 565], scale_ranges=self.affine_scale,
+                shears=self.affine_shears)
+            image = TF.affine(image,
+                              affine_param[0], affine_param[1],
+                              affine_param[2], affine_param[3])
+            mask = TF.affine(mask,
+                             affine_param[0], affine_param[1],
+                             affine_param[2], affine_param[3])
 
-        # Se elige aleatoriamente una transformación:
+        # Se elige aleatoriamente una transformación dentro de un 30% de posibilidades:
         aleat = random()
-        if aleat < 0.33333:
+        if (aleat > 0.7) & (aleat < 0.8):
             image = TF.adjust_brightness(image, brightness)
-        elif aleat < 0.66666:
+        elif (aleat > 0.8) & (aleat < 0.9):
             image = TF.adjust_gamma(image, gamma)
-        else:
+        elif aleat > 0.9:
             image = TF.adjust_contrast(image, contrast)
 
         noisy_tensor = Compose([

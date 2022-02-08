@@ -12,7 +12,7 @@ from utils import get_loaders, save_checkpoint, train_fn, \
 from U_net import UNET
 import os
 
-TRAINING_FOLDER = "2022_02_05_2"
+TRAINING_FOLDER = "2022_01_30_2"
 if not os.path.exists(os.path.join("..", "Checkpoints", TRAINING_FOLDER)):
     os.makedirs(os.path.join("..", "Checkpoints", TRAINING_FOLDER))
     os.makedirs(os.path.join("..", "Checkpoints", TRAINING_FOLDER, "image_predictions"))
@@ -21,11 +21,11 @@ if not os.path.exists(os.path.join("..", "Checkpoints", TRAINING_FOLDER)):
 LR = 2e-3
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 BATCH_SIZE = 2
-NUM_EPOCHS = 2500
-NUM_WORKERS = -1
+NUM_EPOCHS = 2000
+NUM_WORKERS = 0
 PIN_MEMORY = True
 LOAD_MODEL = False
-LOSS_WEIGHTS = 10
+LOSS_WEIGHTS = 7
 CONTROL_METRIC = "dice"
 
 # Training Loader params
@@ -35,13 +35,14 @@ kwargs = {'train_dir': '../../Data/dataset_DRIVE/training/images/',
           'val_dir': '../../Data/dataset_DRIVE/validation/images/',
           'val_maskdir': "../../Data/dataset_DRIVE/validation/1st_manual/",
           'batch_size': BATCH_SIZE,
-          'rotation': [-180, 180],
-          'hflip_prob': 0.5,
+          'rotation': [-45, 45],
+          'hflip_prob': 0.3,
           'brightness': [0.8, 1.2],
           'contrast': [0.8, 1.2],
           'gamma': [0.9, 1.1],
+          'affine_prob': 0.15,
           'affine_translate': [0.05, 0.1],  # Horiz and vert translation
-          'affine_scale': [1, 2],
+          'affine_scale': [1.5, 2],
           'affine_shears': [0, 10],
           'noise': (0, 0.05),  # (Mean,std)
           'num_workers': 0,
@@ -160,6 +161,7 @@ params = {
           'BRIGHTNESS': kwargs['brightness'],
           'CONTRAST': kwargs['contrast'],
           'GAMMA': kwargs['gamma'],
+          'AFFINE_PROB': kwargs['affine_prob'],
           'AFFINE_TRANSLATE': kwargs['affine_translate'],
           'AFFINE_SCALE': kwargs['affine_scale'],
           'AFFINE_SHEARS': kwargs['affine_shears'],
