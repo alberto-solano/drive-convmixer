@@ -12,7 +12,7 @@ from utils import get_loaders, save_checkpoint, train_fn, \
 from U_net import UNET
 import os
 
-TRAINING_FOLDER = "2022_01_30_2"
+TRAINING_FOLDER = "2022_02_09_1"
 if not os.path.exists(os.path.join("..", "Checkpoints", TRAINING_FOLDER)):
     os.makedirs(os.path.join("..", "Checkpoints", TRAINING_FOLDER))
     os.makedirs(os.path.join("..", "Checkpoints", TRAINING_FOLDER, "image_predictions"))
@@ -148,8 +148,8 @@ for epoch in range(NUM_EPOCHS):
 
     if not epoch % 20 or epoch == (NUM_EPOCHS - 1):
         torch.save(training_logs, "../Checkpoints/{}/training_logs.pt".format(TRAINING_FOLDER))
-
-    lr_scheduler.step(np.mean(train_results["loss"][-50:]))
+    
+    lr_scheduler.step(np.mean(train_results["loss"]))
 
 params = {
           'LR': LR,
