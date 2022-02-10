@@ -1,7 +1,7 @@
 import os
 from torch.utils.data import Dataset
 from PIL import Image
-from torchvision.transforms import ToTensor, Compose, RandomAffine
+from torchvision.transforms import ToTensor, Compose, RandomAffine, RandomApply
 import torchvision.transforms.functional as TF
 import torch
 from random import random
@@ -59,6 +59,7 @@ class DRIVE_dataset (Dataset):
 
         # Se elige aleatoriamente una transformación dentro de un 30% de posibilidades:
         aleat = random()
+
         if (aleat > 0.7) & (aleat < 0.8):
             image = TF.adjust_brightness(image, brightness)
         elif (aleat > 0.8) & (aleat < 0.9):
@@ -68,7 +69,7 @@ class DRIVE_dataset (Dataset):
 
         noisy_tensor = Compose([
                         ToTensor(),
-                        AddGaussianNoise(self.noise[0], self.noise[1])])
+                        RandomApply([AddGaussianNoise(self.noise[0], self.noise[1]), ], p=0.3)])
         image = noisy_tensor(image)
         tens = ToTensor()
         mask = tens(mask)

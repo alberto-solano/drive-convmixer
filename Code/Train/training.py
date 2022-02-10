@@ -37,14 +37,14 @@ kwargs = {'train_dir': '../../Data/dataset_DRIVE/training/images/',
           'batch_size': BATCH_SIZE,
           'rotation': [-45, 45],
           'hflip_prob': 0.3,
-          'brightness': [0.8, 1.2],
-          'contrast': [0.8, 1.2],
-          'gamma': [0.9, 1.1],
-          'affine_prob': 0.15,
+          'brightness': [0.5, 1.5],
+          'contrast': [0.5, 1.5],
+          'gamma': [0.7, 1.3],
+          'affine_prob': 0.4,
           'affine_translate': [0.05, 0.1],  # Horiz and vert translation
-          'affine_scale': [1.5, 2],
-          'affine_shears': [0, 10],
-          'noise': (0, 0.05),  # (Mean,std)
+          'affine_scale': [1, 1.3],
+          'affine_shears': [0, 0],
+          'noise': (0, 0.2),  # (Mean,std)
           'num_workers': 0,
           'pin_memory': True}
 
@@ -148,7 +148,7 @@ for epoch in range(NUM_EPOCHS):
 
     if not epoch % 20 or epoch == (NUM_EPOCHS - 1):
         torch.save(training_logs, "../Checkpoints/{}/training_logs.pt".format(TRAINING_FOLDER))
-    
+ 
     lr_scheduler.step(np.mean(train_results["loss"]))
 
 params = {
