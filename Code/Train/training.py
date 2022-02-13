@@ -12,20 +12,20 @@ from utils import get_loaders, save_checkpoint, train_fn, \
 from U_net import UNET
 import os
 
-TRAINING_FOLDER = "2022_02_12_6"
+TRAINING_FOLDER = "2022_02_13_3"
 if not os.path.exists(os.path.join("..", "Checkpoints", TRAINING_FOLDER)):
     os.makedirs(os.path.join("..", "Checkpoints", TRAINING_FOLDER))
     os.makedirs(os.path.join("..", "Checkpoints", TRAINING_FOLDER, "image_predictions"))
 
 # Model Hyperparams
-LR = 2e-3
+LR = 2.5e-4
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 BATCH_SIZE = 2
-NUM_EPOCHS = 1000
+NUM_EPOCHS = 500
 NUM_WORKERS = 0
 PIN_MEMORY = True
 LOAD_MODEL = False
-LOSS_WEIGHTS = 1
+LOSS_WEIGHTS = 3
 CONTROL_METRIC = "dice"
 
 # Training Loader params
@@ -42,7 +42,7 @@ kwargs = {'train_dir': '../../Data/dataset_DRIVE/training/images/',
           'gamma': [0.9, 1.1],
           'affine_prob': 0.3,
           'affine_translate': [0.0, 0.1],  # Horiz and vert translation
-          'affine_scale': [1, 1.2],
+          'affine_scale': [1, 1.1],
           'affine_shears': [0, 0],
           'noise': (0, 0.1),  # (Mean,std)
           'num_workers': 0,
@@ -87,7 +87,7 @@ loss_fn = nn.BCEWithLogitsLoss(pos_weight=torch.Tensor([LOSS_WEIGHTS]).
                                to(DEVICE))  # Crossentropy loss
 optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 # checkpoint loading
-LOAD_CHECKPOINT = False
+LOAD_CHECKPOINT = True
 if LOAD_CHECKPOINT:
     state = torch.load("../Checkpoints/{}/my_check.pth.tar".format(TRAINING_FOLDER))
     model.load_state_dict(state["state_dict"])
