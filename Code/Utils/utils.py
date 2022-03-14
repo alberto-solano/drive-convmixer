@@ -1,5 +1,5 @@
 import torch
-from dataset import DRIVE_dataset
+from dataset import DRIVE_dataset, DRIVE_dataset_padding
 from torch.utils.data import DataLoader
 import torchvision
 from sklearn.metrics import roc_auc_score
@@ -46,6 +46,76 @@ def get_loaders(
     )
 
     validation_ds = DRIVE_dataset(
+        image_dir=val_dir,
+        mask_dir=val_maskdir,
+        transform="test",
+        rotation=rotation,
+        hflip_prob=hflip_prob,
+        brightness=brightness,
+        contrast=contrast,
+        gamma=gamma,
+        affine_prob=affine_prob,
+        affine_translate=affine_translate,
+        affine_scale=affine_scale,
+        affine_shears=affine_shears,
+        noise=noise
+    )
+
+    train_loader = DataLoader(
+        train_ds,
+        batch_size=batch_size,
+        num_workers=num_workers,
+        pin_memory=pin_memory,
+        shuffle=True,
+    )
+
+    val_loader = DataLoader(
+        validation_ds,
+        batch_size=batch_size,
+        num_workers=num_workers,
+        pin_memory=pin_memory,
+        shuffle=False,
+    )
+
+    return train_loader, val_loader
+
+def get_padded_loaders(
+    train_dir,
+    train_maskdir,
+    val_dir,
+    val_maskdir,
+    batch_size,
+    rotation,
+    hflip_prob,
+    brightness,
+    contrast,
+    gamma,
+    affine_prob,
+    affine_translate,
+    affine_scale,
+    affine_shears,
+    noise,
+    num_workers,
+    pin_memory
+):
+
+    train_ds = DRIVE_dataset_padding(
+        image_dir=train_dir,
+        mask_dir=train_maskdir,
+        transform="train",
+        rotation=rotation,
+        hflip_prob=hflip_prob,
+        brightness=brightness,
+        contrast=contrast,
+        gamma=gamma,
+        affine_prob=affine_prob,
+        affine_translate=affine_translate,
+        affine_scale=affine_scale,
+        affine_shears=affine_shears,
+        noise=noise
+    )
+
+    validation_ds = DRIVE_dataset_padding(
         image_dir=val_dir,
         mask_dir=val_maskdir,
         transform="test",
