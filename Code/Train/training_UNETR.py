@@ -34,7 +34,7 @@ kwargs = {'train_dir': '../../Data/dataset_DRIVE/training/images/',
           'val_dir': '../../Data/dataset_DRIVE/validation/images/',
           'val_maskdir': "../../Data/dataset_DRIVE/validation/1st_manual/",
           'batch_size': BATCH_SIZE,
-          'rotation': [-180, 180],
+          'rotation': [0, 0],
           'hflip_prob': 0.4,
           'brightness': [0.8, 1.2],
           'contrast': [0.8, 1.2],
@@ -81,7 +81,7 @@ training_logs = {
 
 # Training
 
-model = UNETR(in_channels=3, out_channels=1, img_size=576, spatial_dims=2, feature_size=72)
+model = UNETR(in_channels=3, out_channels=1, img_size=576, spatial_dims=2, feature_size=72).to(DEVICE)
 loss_fn = nn.BCEWithLogitsLoss(pos_weight=torch.Tensor([LOSS_WEIGHTS]).
                                to(DEVICE))  # Crossentropy loss
 optimizer = torch.optim.Adam(model.parameters(), lr=LR)

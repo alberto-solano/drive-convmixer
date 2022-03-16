@@ -195,6 +195,12 @@ class DRIVE_dataset_padding (Dataset):
         return image, mask
 
     def transform_test(self, image, mask):
+        # Padding
+        image = TF.pad(image, (5, 0, 6, 0), padding_mode="constant", fill=0)
+        mask = TF.pad(mask, (5, 0, 6, 0), padding_mode="constant", fill=0)
+        # Cropping
+        image = ImageOps.crop(image, (0, 4, 0, 4))
+        mask = ImageOps.crop(image, (0, 4, 0, 4))
         # Transform to tensor
         tens = ToTensor()
         image = tens(image)
