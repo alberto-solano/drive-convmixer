@@ -1,6 +1,6 @@
 import os
 from torch.utils.data import Dataset
-from PIL import Image
+from PIL import Image, ImageOps
 from torchvision.transforms import ToTensor, Compose, RandomAffine, RandomApply
 import torchvision.transforms.functional as TF
 import torch
@@ -149,8 +149,11 @@ class DRIVE_dataset_padding (Dataset):
         contrast = np.random.uniform(self.contrast[0], self.contrast[1])
 
         # Padding
-        image = TF.pad(image, (9, 0, 10, 0), padding_mode="constant", fill=0)
-        mask = TF.pad(mask, (9, 0, 10, 0), padding_mode="constant", fill=0)
+        image = TF.pad(image, (5, 0, 6, 0), padding_mode="constant", fill=0)
+        mask = TF.pad(mask, (5, 0, 6, 0), padding_mode="constant", fill=0)
+        # Cropping
+        image = ImageOps.crop(image, (0, 4, 0, 4))
+        mask = ImageOps.crop(image, (0, 4, 0, 4))
         # Random rotation
         image = TF.rotate(image, degree)
         mask = TF.rotate(mask, degree)
