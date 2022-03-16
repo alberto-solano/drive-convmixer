@@ -34,7 +34,7 @@ kwargs = {'train_dir': '../../Data/dataset_DRIVE/training/images/',
           'val_dir': '../../Data/dataset_DRIVE/validation/images/',
           'val_maskdir': "../../Data/dataset_DRIVE/validation/1st_manual/",
           'batch_size': BATCH_SIZE,
-          'rotation': [0, 0],
+          'rotation': [0, 1],
           'hflip_prob': 0.4,
           'brightness': [0.8, 1.2],
           'contrast': [0.8, 1.2],
@@ -86,7 +86,7 @@ loss_fn = nn.BCEWithLogitsLoss(pos_weight=torch.Tensor([LOSS_WEIGHTS]).
                                to(DEVICE))  # Crossentropy loss
 optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 # checkpoint loading
-LOAD_CHECKPOINT = True
+LOAD_CHECKPOINT = False
 if LOAD_CHECKPOINT:
     state = torch.load("../Checkpoints_UNETR/{}/my_check.pth.tar".format(TRAINING_FOLDER))
     model.load_state_dict(state["state_dict"])

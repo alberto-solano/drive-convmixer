@@ -153,7 +153,7 @@ class DRIVE_dataset_padding (Dataset):
         mask = TF.pad(mask, (5, 0, 6, 0), padding_mode="constant", fill=0)
         # Cropping
         image = ImageOps.crop(image, (0, 4, 0, 4))
-        mask = ImageOps.crop(image, (0, 4, 0, 4))
+        mask = ImageOps.crop(mask, (0, 4, 0, 4))
         # Random rotation
         image = TF.rotate(image, degree)
         mask = TF.rotate(mask, degree)
@@ -200,7 +200,7 @@ class DRIVE_dataset_padding (Dataset):
         mask = TF.pad(mask, (5, 0, 6, 0), padding_mode="constant", fill=0)
         # Cropping
         image = ImageOps.crop(image, (0, 4, 0, 4))
-        mask = ImageOps.crop(image, (0, 4, 0, 4))
+        mask = ImageOps.crop(mask, (0, 4, 0, 4))
         # Transform to tensor
         tens = ToTensor()
         image = tens(image)
