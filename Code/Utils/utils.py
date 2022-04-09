@@ -4,6 +4,7 @@ from torch.utils.data import DataLoader
 import torchvision
 from sklearn.metrics import roc_auc_score
 import math
+import torch.nn as nn
 import numpy as np
 import warnings
 from typing import Union, Optional, List, Tuple
@@ -372,3 +373,52 @@ def make_grid(
             ).copy_(tensor[k])
             k = k + 1
     return grid
+
+
+#PyTorch
+class DiceBCELoss(nn.Module):
+    def __init__(self, weight=1, size_average=True, ratio = 0.5):
+        super(DiceBCELoss, self).__init__()
+        self.weight = weight
+        self.ratio = ratio # Dice over BCE
+    def forward(self, inputs, targets, smooth=1):
+        
+        #comment out if your model contains a sigmoid or equivalent activation layer
+        inputs = torch.sigmoid(inputs)       
+        
+        #flatten label and prediction tensors
+        inputs = inputs.view(-1)
+        targets = targets.view(-1)
+        
+        intersection = (inputs * targets).sum()                            
+        dice_loss = 1 - (2.*intersection + smooth)/(inputs.sum() + targets.sum() + smooth)  
+        BCE = nn.functional.binary_cross_entropy_with_logits(inputs, targets, reduction='mean', pos_weight=self.weight)
+        Dice_BCE = (1-self.ratio)*BCE + self.ratio*dice_loss
+        
+        return Dice_BCE
+
+
+class TverskyLoss(nn.Module):
+    def __init__(self, weight=None, size_average=True, alpha=0.5, beta=0.5, smooth=1):
+        super(TverskyLoss, self).__init__()
+        self.alpha = alpha
+        self.beta = beta
+        self.smooth = smooth
+
+    def forward(self, inputs, targets):
+        
+        #comment out if your model contains a sigmoid or equivalent activation layer
+        inputs = torch.sigmoid(inputs)      
+        
+        #flatten label and prediction tensors
+        inputs = inputs.view(-1)
+        targets = targets.view(-1)
+        
+        #True Positives, False Positives & False Negatives
+        TP = (inputs * targets).sum() 
+        FP = ((1-targets) * inputs).sum()
+        FN = (targets * (1-inputs)).sum()
+       
+        Tversky = (TP + self.smooth) / (TP + self.alpha*FP + self.beta*FN + self.smooth)
+        
+        return 1 - Tversky
