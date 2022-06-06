@@ -90,6 +90,10 @@ model = SwinTransformerSys(img_size=576, embed_dim=96, in_chans = 3, num_classes
                            norm_layer=nn.LayerNorm, ape=False, patch_norm=True,
                            use_checkpoint=False, final_upsample="expand_first").to(DEVICE)
 
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+count_parameters(model)
+
 loss_fn = nn.BCEWithLogitsLoss(pos_weight=torch.Tensor([LOSS_WEIGHTS]).
                                to(DEVICE))  # Crossentropy loss
 optimizer = torch.optim.Adam(model.parameters(), lr=LR)
