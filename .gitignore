@@ -1,3 +1,8 @@
 **/.DS_Store
+**/.__pycache__
 */.ipynb_checkpoints/*.ipynb
 **/my_check.pth.tar
+*.pfd
+*.pages
+library/
+*.icloud
