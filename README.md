@@ -1,1 +1,1 @@
-Repositorio para ir añadiendo contenido y actualizando los cambios en mi TFM.
+Main repository for updating my master's thesis changes.

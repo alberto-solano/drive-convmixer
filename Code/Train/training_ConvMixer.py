@@ -28,10 +28,10 @@ LOSS_WEIGHTS = 3
 CONTROL_METRIC = "dice"
 RATIO = 0.5 # The higher the more weight to BCE
 LOSS_METRIC = f"DICE+BCE_weights={LOSS_WEIGHTS}_ratio={RATIO}"
-DEPTH = 32
-KERNEL = 7
-PATCH_SIZE = 18
-H = 768
+DEPTH = 20
+KERNEL = 3
+PATCH_SIZE = 72
+H = 375
 
 # Training Loader params
 
