@@ -1,8 +1,4 @@
-numpy
-opencv-python
-Pillow
-torch
-torchvision
-sklearn
-monai
-einops
+distlib==0.3.6
+filelock==3.9.0
+platformdirs==3.0.0
+virtualenv==20.19.0

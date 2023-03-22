@@ -7,3 +7,5 @@
 library/
 *.icloud
 Data/dataset_DRIVE/submit*/
+venv/
+**/*ipynb

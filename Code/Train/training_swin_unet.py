@@ -1,17 +1,16 @@
-from unittest.mock import patch
 import numpy as np
 import torch
 import torch.nn as nn
 from sklearn.metrics import roc_auc_score
 import time
 import sys
+import os
 sys.path.append("../Utils")
 sys.path.append('../Models')
 
 from utils import get_padded_loaders, save_checkpoint, train_fn, \
     save_predictions_as_imgs, eval_model, epoch_logging
 from Swin_Unet import SwinTransformerSys
-import os
 
 TRAINING_FOLDER = "2022_02_13_3"
 if not os.path.exists(os.path.join("..", "Checkpoints_Swin_Unet", TRAINING_FOLDER)):

@@ -1,5 +1,5 @@
 import torch
-from dataset import DRIVE_dataset, DRIVE_dataset_padding, DRIVE_dataset_resizing
+from Code.Utils.dataset import DRIVE_dataset, DRIVE_dataset_padding, DRIVE_dataset_resizing
 from torch.utils.data import DataLoader
 import torchvision
 from sklearn.metrics import roc_auc_score
