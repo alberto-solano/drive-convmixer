@@ -9,7 +9,7 @@ from Code.Utils.utils import get_loaders, save_checkpoint, train_fn, \
 from Code.Models.U_net import UNET
 
 # Name for a run
-TRAINING_FOLDER = "2022_02_13_3"
+TRAINING_FOLDER = "2023_03_23_1"
 
 # Model Hyperparams
 LR = 2.5e-4

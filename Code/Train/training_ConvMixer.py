@@ -8,7 +8,7 @@ from Code.Models.ConvMixer import ConvMixer
 import os
 
 # Name for a run
-TRAINING_FOLDER = "2022_04_27_1"
+TRAINING_FOLDER = "2023_03_23_1"
 
 # Model Hyperparams
 LR = 0.002
