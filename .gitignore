@@ -9,3 +9,4 @@ library/
 Data/dataset_DRIVE/submit*/
 venv/
 **/*ipynb
+**/.egg-info
