@@ -10,3 +10,4 @@ Data/dataset_DRIVE/submit*/
 venv/
 **/*ipynb
 drive_convmixer.egg-info/
+Results/
