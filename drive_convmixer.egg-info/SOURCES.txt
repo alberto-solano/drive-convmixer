@@ -1,6 +1,0 @@
-README.md
-setup.py
-drive_convmixer.egg-info/PKG-INFO
-drive_convmixer.egg-info/SOURCES.txt
-drive_convmixer.egg-info/dependency_links.txt
-drive_convmixer.egg-info/top_level.txt
