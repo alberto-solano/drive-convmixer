@@ -30,12 +30,12 @@ if not os.path.exists(os.path.join(proj_path, "Code", "Checkpoints_UNET", TRAINI
     os.makedirs(os.path.join(proj_path, "Code", "Checkpoints_UNET", TRAINING_FOLDER, "image_predictions"))
 
 
-# Training Loader params
+# Set the Training params
 
 kwargs = {'train_dir': os.path.join(proj_path, 'Data/dataset_DRIVE/training/images/'),
           'train_maskdir': os.path.join(proj_path, 'Data/dataset_DRIVE/training/1st_manual/'),
           'val_dir': os.path.join(proj_path, 'Data/dataset_DRIVE/validation/images/'),
-          'val_maskdir': os.path.join(proj_path,'Data/dataset_DRIVE/validation/1st_manual/'),
+          'val_maskdir': os.path.join(proj_path, 'Data/dataset_DRIVE/validation/1st_manual/'),
           'batch_size': BATCH_SIZE,
           'rotation': [-180, 180],
           'hflip_prob': 0.4,
@@ -141,7 +141,7 @@ for epoch in range(NUM_EPOCHS):
                       "optimizer": optimizer.state_dict(),
                       "best_metric": training_logs["best_"+CONTROL_METRIC]}
         save_checkpoint(checkpoint, os.path.join(proj_path, f"Code/Checkpoints_UNET/{TRAINING_FOLDER}/my_check.pth.tar"),
-                        best_metric = training_logs["best_"+CONTROL_METRIC])
+                        best_metric=training_logs["best_"+CONTROL_METRIC])
         save_predictions_as_imgs(val_loader, model,
                                  folder=os.path.join(proj_path, f"Code/Checkpoints_UNET/{TRAINING_FOLDER}/image_predictions"),
                                  device=DEVICE)

@@ -3,18 +3,12 @@ import torch
 import torch.nn as nn
 from sklearn.metrics import roc_auc_score
 import time
-import sys
-sys.path.append("../Utils")
-from utils import get_padded_loaders, save_checkpoint, train_fn, \
-    save_predictions_as_imgs, eval_model, epoch_logging, TverskyLoss, DiceBCELoss
-sys.path.append("../Models")
-from ConvMixer import ConvMixer
+from Code.Utils.utils import get_padded_loaders, save_checkpoint, train_fn, save_predictions_as_imgs, eval_model, epoch_logging, TverskyLoss, DiceBCELoss
+from Code.Models.ConvMixer import ConvMixer
 import os
 
+# Name for a run
 TRAINING_FOLDER = "2022_04_27_1"
-if not os.path.exists(os.path.join("..", "Checkpoints_ConvMixer", TRAINING_FOLDER)):
-    os.makedirs(os.path.join("..", "Checkpoints_ConvMixer", TRAINING_FOLDER))
-    os.makedirs(os.path.join("..", "Checkpoints_ConvMixer", TRAINING_FOLDER, "image_predictions"))
 
 # Model Hyperparams
 LR = 0.002
@@ -23,22 +17,29 @@ BATCH_SIZE = 1
 NUM_EPOCHS = 1000
 NUM_WORKERS = 0
 PIN_MEMORY = True
-LOAD_MODEL = False
+LOAD_CHECKPOINT = False
 LOSS_WEIGHTS = 3
 CONTROL_METRIC = "dice"
-RATIO = 0.5 # The higher the more weight to BCE
+RATIO = 0.5
+# The higher the more weight to BCE
 LOSS_METRIC = f"DICE+BCE_weights={LOSS_WEIGHTS}_ratio={RATIO}"
 DEPTH = 20
 KERNEL = 3
 PATCH_SIZE = 72
 H = 375
 
-# Training Loader params
+filepath = os.path.abspath(__file__)
+proj_path = os.path.abspath(os.path.join(filepath, "..", "..", ".."))
+if not os.path.exists(os.path.join(proj_path, "Code", "Checkpoints_ConvMixer", TRAINING_FOLDER)):
+    os.makedirs(os.path.join(proj_path, "Code", "Checkpoints_ConvMixer", TRAINING_FOLDER))
+    os.makedirs(os.path.join(proj_path, "Code", "Checkpoints_ConvMixer", TRAINING_FOLDER, "image_predictions"))
 
-kwargs = {'train_dir': '../../Data/dataset_DRIVE/training/images/',
-          'train_maskdir': '../../Data/dataset_DRIVE/training/1st_manual/',
-          'val_dir': '../../Data/dataset_DRIVE/validation/images/',
-          'val_maskdir': "../../Data/dataset_DRIVE/validation/1st_manual/",
+# Set the Training params
+
+kwargs = {'train_dir': os.path.join(proj_path, 'Data/dataset_DRIVE/training/images/'),
+          'train_maskdir': os.path.join(proj_path, 'Data/dataset_DRIVE/training/1st_manual/'),
+          'val_dir': os.path.join(proj_path, 'Data/dataset_DRIVE/validation/images/'),
+          'val_maskdir': os.path.join(proj_path, 'Data/dataset_DRIVE/validation/1st_manual/'),
           'batch_size': BATCH_SIZE,
           'rotation': [0, 1],
           'hflip_prob': 0.4,
@@ -90,20 +91,19 @@ training_logs = {
 model = ConvMixer(h=H, depth=DEPTH, kernel_size=KERNEL, patch_size=PATCH_SIZE).to(DEVICE)
 
 if LOSS_METRIC == "BCE_logits":
-  loss_fn = nn.BCEWithLogitsLoss(weight=torch.Tensor([LOSS_WEIGHTS]).to(DEVICE))
+    loss_fn = nn.BCEWithLogitsLoss(weight=torch.Tensor([LOSS_WEIGHTS]).to(DEVICE))
 elif LOSS_METRIC == "Tversky":
-  loss_fn = TverskyLoss(**tversky).to(DEVICE)
+    loss_fn = TverskyLoss().to(DEVICE)
 else:
-  loss_fn = DiceBCELoss(weight=torch.Tensor([LOSS_WEIGHTS]).
-                               to(DEVICE), ratio=RATIO) # Crossentropy loss
+    loss_fn = DiceBCELoss(weight=torch.Tensor([LOSS_WEIGHTS]).to(DEVICE), ratio=RATIO) # Crossentropy loss
 optimizer = torch.optim.Adam(model.parameters(), lr=LR)
+
 # checkpoint loading
-LOAD_CHECKPOINT = False
 if LOAD_CHECKPOINT:
-    state = torch.load("../Checkpoints_ConvMixer/{}/my_check.pth.tar".format(TRAINING_FOLDER))
+    state = torch.load(os.path.join(proj_path, f"Code/Checkpoints_ConvMixer/{TRAINING_FOLDER}/my_check.pth.tar"))
     model.load_state_dict(state["state_dict"])
     optimizer.load_state_dict(state["optimizer"])
-    training_logs = torch.load("../Checkpoints_ConvMixer/{}/training_logs.pt".format(TRAINING_FOLDER))
+    training_logs = torch.load(os.path.join(proj_path, f"Code/Checkpoints_ConvMixer/{TRAINING_FOLDER}/training_logs.pt"))
 
 lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, "min",
                                                           factor=0.5,
@@ -150,15 +150,16 @@ for epoch in range(NUM_EPOCHS):
         checkpoint = {"state_dict": model.state_dict(),
                       "optimizer": optimizer.state_dict(),
                       "best_metric": training_logs["best_"+CONTROL_METRIC]}
-        save_checkpoint(checkpoint, "../Checkpoints_ConvMixer/{}/my_check.pth.tar".format(TRAINING_FOLDER), best_metric = training_logs["best_"+CONTROL_METRIC])
+        save_checkpoint(checkpoint, os.path.join(proj_path, f"Code/Checkpoints_ConvMixer/{TRAINING_FOLDER}/my_check.pth.tar"),
+                        best_metric=training_logs["best_"+CONTROL_METRIC])
         save_predictions_as_imgs(val_loader, model,
-                                 folder="../Checkpoints_ConvMixer/{}/image_predictions".format(TRAINING_FOLDER),
+                                 folder=os.path.join(proj_path, f"Code/Checkpoints_ConvMixer/{TRAINING_FOLDER}/image_predictions"),
                                  device=DEVICE)
 
     training_logs["saved"].append(check)
 
     if not epoch % 20 or epoch == (NUM_EPOCHS - 1):
-        torch.save(training_logs, "../Checkpoints_ConvMixer/{}/training_logs.pt".format(TRAINING_FOLDER))
+        torch.save(training_logs, os.path.join(proj_path, f"Code/Checkpoints_ConvMixer/{TRAINING_FOLDER}/training_logs.pt"))
  
     lr_scheduler.step(np.mean(train_results["loss"]))
 
@@ -186,4 +187,4 @@ params = {
           'ACCURACY': training_logs["best_accuracy"],
           'AUC': training_logs["best_auc"]
 }
-torch.save(params, "../Checkpoints_ConvMixer/{}/training_params.pt".format(TRAINING_FOLDER))
+torch.save(params, os.path.join(proj_path, f"Code/Checkpoints_ConvMixer/{TRAINING_FOLDER}/training_params.pt"))
