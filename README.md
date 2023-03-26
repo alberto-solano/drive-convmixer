@@ -25,3 +25,9 @@ The `Data` folder contains the different splits (training, validation and test) 
 - `Train/`: Training script of each model.
 - `Utils/dataset.py`: PyTorch dataset and augmentations used.
 - `Utils/utils.py`: Utilities to process the data and manage the training.
+
+## Model weights
+
+- **ConvMixer (Light)**: [Weights](https://drive.google.com/file/d/1OJyf7EOdn4tIL85qHbhvAHILX4NNURbQ/view?usp=share_link) | [Parameters](https://drive.google.com/file/d/1a0P9SghXbVaRTtCd6lX-auk0tWVu3xY4/view?usp=share_link)
+
+- **ConvMixer**: [Weights](https://drive.google.com/file/d/1lXsy8lZoffX6hsEBE0YyU7lMym259LSi/view?usp=share_link) | [Parameters](https://drive.google.com/file/d/1gB3jipjE5Cz2_c6kNipbuXKWyS3EMsws/view?usp=share_link)
