@@ -6,6 +6,12 @@ Alberto Solano $^{1}$, Kevin N. Dietrich $^{1}$, Marcelino Martínez-Sober $^{1}
 
 > $^{2}$ Image Processing Lab., Universitat de València, 46980 Paterna, Spain
 
+## Repository Index
+
+1. [Abstract](#abstract)
+2. [Repository Organization](#repository-organization)
+3. [Model Weights](#model-weights)
+
 ## Abstract
 
 For many years, convolutional neural networks dominated the field of computer vision, not least in the medical field, where problems such as image segmentation were addressed by such networks as the U-Net. The arrival of self-attention based networks to the field of computer vision through ViTs seems to have changed the trend of using standard convolutions. Throughout this work, we apply different architectures such as U-Net, ViTs and ConvMixer, to compare their performance on a medical semantic segmentation problem.
