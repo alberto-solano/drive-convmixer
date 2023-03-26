@@ -37,3 +37,9 @@ The `Data` folder contains the different splits (training, validation and test) 
 - **ConvMixer (Light)**: [Weights](https://drive.google.com/file/d/1OJyf7EOdn4tIL85qHbhvAHILX4NNURbQ/view?usp=share_link) | [Parameters](https://drive.google.com/file/d/1a0P9SghXbVaRTtCd6lX-auk0tWVu3xY4/view?usp=share_link)
 
 - **ConvMixer**: [Weights](https://drive.google.com/file/d/1lXsy8lZoffX6hsEBE0YyU7lMym259LSi/view?usp=share_link) | [Parameters](https://drive.google.com/file/d/1gB3jipjE5Cz2_c6kNipbuXKWyS3EMsws/view?usp=share_link)
+
+## Results
+
+Sample results extracted from the paper:
+
+![Sample results extracted from the paper](./test_prediction_all_models_dice.png "Logo Title Text 1")
