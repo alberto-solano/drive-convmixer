@@ -8,25 +8,25 @@ from Code.Models.ConvMixer import ConvMixer
 import os
 
 # Name for a run
-TRAINING_FOLDER = "2023_03_23_1"
+TRAINING_FOLDER = "2023_05_22s_1"
 
 # Model Hyperparams
 LR = 0.002
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-BATCH_SIZE = 1
+BATCH_SIZE = 2
 NUM_EPOCHS = 1000
 NUM_WORKERS = 0
 PIN_MEMORY = True
 LOAD_CHECKPOINT = False
-LOSS_WEIGHTS = 3
+LOSS_WEIGHTS = 1.5
 CONTROL_METRIC = "dice"
-RATIO = 0.5
+RATIO = 0.7
 # The higher the more weight to BCE
 LOSS_METRIC = f"DICE+BCE_weights={LOSS_WEIGHTS}_ratio={RATIO}"
-DEPTH = 20
+DEPTH = 14
 KERNEL = 3
-PATCH_SIZE = 72
-H = 375
+PATCH_SIZE = 3
+H = 128
 
 filepath = os.path.abspath(__file__)
 proj_path = os.path.abspath(os.path.join(filepath, "..", "..", ".."))
@@ -41,16 +41,16 @@ kwargs = {'train_dir': os.path.join(proj_path, 'Data/dataset_DRIVE/training/imag
           'val_dir': os.path.join(proj_path, 'Data/dataset_DRIVE/validation/images/'),
           'val_maskdir': os.path.join(proj_path, 'Data/dataset_DRIVE/validation/1st_manual/'),
           'batch_size': BATCH_SIZE,
-          'rotation': [0, 1],
-          'hflip_prob': 0.4,
-          'brightness': [0.8, 1.2],
-          'contrast': [0.8, 1.2],
-          'gamma': [0.9, 1.1],
-          'affine_prob': 0.3,
-          'affine_translate': [0.0, 0.1],  # Horiz and vert translation
-          'affine_scale': [1, 1.2],
+          'rotation': [-45, 45],
+          'hflip_prob': 0.3,
+          'brightness': [0.6, 1.6],
+          'contrast': [0.6, 1.6],
+          'gamma': [0.7, 1.5],
+          'affine_prob': 0.15,
+          'affine_translate': [0.1, 0.1],  # Horiz and vert translation
+          'affine_scale': [1, 1.25],
           'affine_shears': [0, 0],
-          'noise': (0, 0.1),  # (Mean,std)
+          'noise': (0, 0.05),  # (Mean,std)
           'num_workers': 0,
           'pin_memory': True}
 
@@ -58,7 +58,7 @@ train_loader, val_loader = get_padded_loaders(**kwargs)
 
 
 def metric_fn(logits, targets, thres=0.5):
-    probs = torch.sigmoid(logits)
+    probs = logits
     preds = probs > thres
 
     overlapping = preds + targets
